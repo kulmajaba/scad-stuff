@@ -2,7 +2,7 @@ $fa = 5;
 $fs = 1;
 
 bottleDiameter = 70;
-topBottleDiameter = 100;
+topBottleDiameter = 80;
 depth = 20;
 layers = 3;
 bottomBottleCount = 3;
@@ -36,12 +36,11 @@ difference() {
     for(i = [0:layers - 1]) {
       layerSize = stack ? bottomBottleCount - 1 : bottomBottleCount - 1 - i % 2;
       for(j = [0:layerSize]) {
-        translateLocation(i, j) union() {
-          cylinder(depth, r = (isTopLayer(i) ? topBottleDiameter : bottleDiameter) / 2 + wallThickness);
-          if (j < layerSize) translate([fullHolderDiameter / 2, isTopLayer(i) ? - topBottleDiameter / 2 - wallThickness + fullHolderDiameter / 4 : 0, depth / 2]) cube([fullHolderDiameter, isTopLayer(i) ? fullHolderDiameter / 2 : fullHolderDiameter, depth], true);
-        };
+        translateLocation(i, j) cylinder(depth, r = (isTopLayer(i) ? topBottleDiameter : bottleDiameter) / 2 + wallThickness);
       }
     }
+    translate([1 / 4 * (bottleDiameter + wallThickness), 0, 0]) cube([(bottomBottleCount - 1.5) * bottleDiameter + bottomBottleCount * wallThickness, (layers - 1.5) * layerYOffset + bottleDiameter / 2 + wallThickness + topLayerExtraYOffset, depth]);
+    translate([0, - (bottleDiameter / 2 + wallThickness), 0]) cube([(bottomBottleCount - 1) * (bottleDiameter + wallThickness), bottleDiameter / 2 + wallThickness, depth]);
   };
   
   union() {
