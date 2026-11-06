@@ -2,7 +2,7 @@ $fa = 5;
 $fs = 1;
 
 bottleDiameter = 70;
-topBottleDiameter = 80;
+topBottleDiameter = 100;
 depth = 20;
 layers = 3;
 bottomBottleCount = 3;
@@ -21,22 +21,38 @@ topLayerIndex = layers - 1;
 // Y offset for the difference cube, if top layer is open
 openTopCubeYOffset = topBottleDiameter > bottleDiameter ? topBottleDiameter / 2 + wallThickness - sqrt((topBottleDiameter / 2 + wallThickness) ^ 2 - (bottleDiameter / 2 + wallThickness / 2) ^ 2) + wallThickness : topBottleDiameter / 2;
 
+fullHolderDiameter = bottleDiameter + 2 * wallThickness;
+
 function isTopLayer(index) = index == topLayerIndex;
 
 module translateLocation(row, index) {
+  // x: simple x offset times index on layer + offset half a holder for odd layers
+  // y: simple y offset times layers + extra offset for top layer
   translate([index * (bottleDiameter + wallThickness) + (row % 2) * (bottleDiameter / 2 + wallThickness / 2), row * layerYOffset + (isTopLayer(row) ? topLayerExtraYOffset : 0), 0]) children();
 }
 
-union() {
-  // Uniform layers
-  for(i = [0:layers - 1]) {
-    layerSize = stack ? bottomBottleCount - 1 : bottomBottleCount - 1 - i % 2;
-    for(j = [0:layerSize]) {
-      translateLocation(i, j) difference() {
-        cylinder(depth, r = (isTopLayer(i) ? topBottleDiameter : bottleDiameter) / 2 + wallThickness);
-        translate([0, 0, -eps]) cylinder(depth + 2 * eps, r = (isTopLayer(i) ? topBottleDiameter : bottleDiameter) / 2);
-        if (isTopLayer(i) && openTop) translate([0, openTopCubeYOffset, depth / 2]) cube([topBottleDiameter + wallThickness * 2 + eps * 2, topBottleDiameter + wallThickness * 2, depth + eps * 2], true);
-      };
+difference() {
+  union() {
+    for(i = [0:layers - 1]) {
+      layerSize = stack ? bottomBottleCount - 1 : bottomBottleCount - 1 - i % 2;
+      for(j = [0:layerSize]) {
+        translateLocation(i, j) union() {
+          cylinder(depth, r = (isTopLayer(i) ? topBottleDiameter : bottleDiameter) / 2 + wallThickness);
+          if (j < layerSize) translate([fullHolderDiameter / 2, isTopLayer(i) ? - topBottleDiameter / 2 - wallThickness + fullHolderDiameter / 4 : 0, depth / 2]) cube([fullHolderDiameter, isTopLayer(i) ? fullHolderDiameter / 2 : fullHolderDiameter, depth], true);
+        };
+      }
     }
-  }
+  };
+  
+  union() {
+    for(i = [0:layers - 1]) {
+      layerSize = stack ? bottomBottleCount - 1 : bottomBottleCount - 1 - i % 2;
+      for(j = [0:layerSize]) {
+        translateLocation(i, j) union() {
+          translate([0, 0, -eps]) cylinder(depth + 2 * eps, r = (isTopLayer(i) ? topBottleDiameter : bottleDiameter) / 2);
+          if (isTopLayer(i) && openTop) translate([0, openTopCubeYOffset, depth / 2]) cube([topBottleDiameter + wallThickness * 2 + eps * 2, topBottleDiameter + wallThickness * 2, depth + eps * 2], true);
+        };
+      }
+    }
+  };
 }
